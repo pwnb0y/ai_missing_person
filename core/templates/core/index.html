@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missing Person Identification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h1>AI-Based Missing Person Identification System</h1>
+            <div class="buttons">
+                <a href="{% url 'file_case_frontend' %}" class="btn">File a Case</a>
+                <a href="{% url 'find_person_frontend' %}" class="btn">Find Missing Person</a>
+                <a href="" class="btn">Listed Cases</a>
+                <a href="{% url 'about_us' %}" class="btn">About Us</a>
+            </div>
+        </div>
+        <div class="image">
+            <img src="{% static 'core/homepage.png' %}" alt="Logo" width="200">
+        </div>
+    </div>
+</body>
+</html>

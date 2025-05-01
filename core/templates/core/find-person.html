@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Find Missing Person - Missing Persons Tracker</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    .spinner {
+      display: none;
+      text-align: center;
+      margin-top: 10px;
+    }
+    .spinner-border {
+      width: 2rem;
+      height: 2rem;
+    }
+    .result-container {
+      margin-top: 20px;
+    }
+    .img-thumbnail {
+      max-width: 200px;
+    }
+    .back-button {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .uploaded-image, .result-image {
+      margin-top: 15px;
+      max-width: 250px;
+      max-height: 250px;
+      border: 1px solid #ddd;
+      padding: 5px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <h2 class="mb-4 text-center">Find Missing Person</h2>
+
+    <div class="card p-3">
+      <form id="matchFaceForm">
+        <div class="mb-2">
+          <label for="file" class="form-label">Upload Image</label>
+          <input type="file" class="form-control" name="file" id="fileInput" required>
+        </div>
+        <button class="btn btn-success" type="submit">Match</button>
+      </form>
+
+      <div class="spinner" id="matchSpinner">
+        <div class="spinner-border text-success" role="status"></div>
+      </div>
+
+      <!-- Display Uploaded Image -->
+      <div id="uploadedImageContainer" class="uploaded-image" style="display:none;">
+        <h5>Uploaded Image:</h5>
+        <img id="uploadedImage" class="img-thumbnail" alt="Uploaded Image">
+      </div>
+
+      <!-- Result Section -->
+      <div class="result-container" id="matchFaceResult"></div>
+      
+      <!-- Back to Home Button -->
+      <div class="back-button">
+        <a href="{% url 'home' %}" class="btn btn-secondary">Back to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const matchSpinner = document.getElementById("matchSpinner");
+    const fileInput = document.getElementById("fileInput");
+    const uploadedImageContainer = document.getElementById("uploadedImageContainer");
+    const uploadedImage = document.getElementById("uploadedImage");
+
+    // Display uploaded image preview
+    fileInput.addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          uploadedImage.src = event.target.result;
+          uploadedImageContainer.style.display = "block"; // Show the uploaded image container
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Handle form submission
+    document.getElementById("matchFaceForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      matchSpinner.style.display = "block";
+      document.getElementById("matchFaceResult").innerHTML = "";
+
+      try {
+        const res = await axios.post("http://127.0.0.1:8000/api/match/", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        const data = res.data;
+        if (data.match) {
+          const p = data.person;
+          document.getElementById("matchFaceResult").innerHTML = `
+            <div class="alert alert-success">
+              <h4>Match Found!</h4>
+              <div><strong>Name:</strong> ${p.name}</div>
+              <div><strong>Age:</strong> ${p.age}</div>
+              <div><strong>Gender:</strong> ${p.gender}</div>
+              <div><strong>Height:</strong> ${p.height}</div>
+              <div><strong>Skin Color:</strong> ${p.color}</div>
+              <div><strong>Contact:</strong> ${p.contact}</div>
+              <div><strong>Address:</strong> ${p.address}</div>
+              <div><strong>Last Seen Location:</strong> ${p.last_seen_location}</div>
+              <div><strong>Bounty:</strong> ₹${p.bounty}</div>
+              <div><strong>Reporter:</strong> ${p.reporter_name} (${p.reporter_contact})</div>
+              <div><strong>Message:</strong> ${p.message}</div>
+              <h5>Matched Image:</h5>
+              <img src="http://127.0.0.1:8000/api/temp/${p.image_path.split('/').pop()}" class="result-image" alt="Result Image">
+            </div>
+          `;
+        } else {
+          document.getElementById("matchFaceResult").innerHTML = `
+            <div class="alert alert-warning">No match found.</div>
+          `;
+        }
+      } catch (err) {
+        console.error("Error in matching face:", err);
+        const errorMsg = err.response?.data?.message || err.message || "An error occurred";
+        document.getElementById("matchFaceResult").innerHTML = `
+          <div class="alert alert-danger">Error: ${errorMsg}</div>
+        `;
+      } finally {
+        matchSpinner.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
+    

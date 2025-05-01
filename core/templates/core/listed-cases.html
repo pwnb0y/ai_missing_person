@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Missing Persons</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    .missing-person-card {
+      display: flex;
+      align-items: center;
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      transition: transform 0.3s;
+      flex-wrap: wrap;
+    }
+
+    .missing-person-card:hover {
+      transform: scale(1.02);
+    }
+
+    .missing-person-card img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin-right: 15px;
+    }
+
+    .missing-person-details {
+      display: none;
+      background: #f1f1f1;
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 10px;
+      width: 100%;
+    }
+
+    .person-basic {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .person-info {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-5">
+    <h1 class="mb-4 text-center">Missing Persons</h1>
+    <div id="missingPersonsList"></div>
+  </div>
+
+  <script>
+    async function fetchMissingPersons() {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/missing_persons/');
+        const persons = await response.json();
+
+        const listContainer = document.getElementById('missingPersonsList');
+        listContainer.innerHTML = '';
+
+        persons.forEach(person => {
+          const personCard = document.createElement('div');
+          personCard.classList.add('missing-person-card');
+          personCard.dataset.personId = person.id;
+
+          personCard.innerHTML = `
+            <div class="person-basic">
+              <img src="${person.image}" alt="${person.name}">
+              <div class="person-info">
+                <h5>${person.name}</h5>
+                <p><strong>Contact:</strong> ${person.contact}</p>
+              </div>
+            </div>
+          `;
+
+          const detailsDiv = document.createElement('div');
+          detailsDiv.classList.add('missing-person-details');
+          personCard.appendChild(detailsDiv);
+
+          personCard.addEventListener('click', async () => {
+            if (detailsDiv.style.display === 'none' || detailsDiv.innerHTML === '') {
+              const res = await fetch(`http://127.0.0.1:8000/api/person_details/${person.id}/`);
+              const full = await res.json();
+
+              detailsDiv.innerHTML = `
+                <h4>Details of ${full.name}</h4>
+                <p><strong>Age:</strong> ${full.age}</p>
+                <p><strong>Height:</strong> ${full.height}</p>
+                <p><strong>Color:</strong> ${full.color}</p>
+                <p><strong>Gender:</strong> ${full.gender}</p>
+                <p><strong>Contact:</strong> ${full.contact}</p>
+                <p><strong>Address:</strong> ${full.address}</p>
+                <p><strong>Last Seen:</strong> ${full.last_seen_location}</p>
+                <p><strong>Bounty:</strong> ₹${full.bounty}</p>
+                <p><strong>Reporter:</strong> ${full.reporter_name}</p>
+                <p><strong>Reporter Contact:</strong> ${full.reporter_contact}</p>
+                <p><strong>Reporter Address:</strong> ${full.reporter_address}</p>
+                <p><strong>Message:</strong> ${full.message}</p>
+                <img src="${full.image}" alt="${full.name}" class="img-thumbnail mt-3" style="max-width: 200px;">
+              `;
+              detailsDiv.style.display = 'block';
+            } else {
+              detailsDiv.style.display = 'none';
+            }
+          });
+
+          listContainer.appendChild(personCard);
+        });
+      } catch (err) {
+        console.error('Error fetching missing persons:', err);
+      }
+    }
+
+    window.onload = fetchMissingPersons;
+  </script>
+</body>
+</html>
